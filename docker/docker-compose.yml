@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Spring application
+  bank-api:
+    build: ../swiftcode-decoder-api
+    container_name: swiftcode-decoder-api
+    ports:
+      - "8080:8080"
+    networks:
+      - swift-network
+    depends_on:
+      - bank-api-db
+  # mongoDB
+  bank-api-db:
+    image: mongo:7.0.16-jammy
+    container_name: mongoDB
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - swift-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+
+volumes:
+  mongo_data:
+
+networks:
+  swift-network:
+    driver: bridge
