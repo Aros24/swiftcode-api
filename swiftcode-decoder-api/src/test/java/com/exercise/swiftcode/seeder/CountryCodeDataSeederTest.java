@@ -58,10 +58,13 @@ class CountryCodeDataSeederTest {
 
     @Test
     void testRun_SkipsLoading_WhenCollectionExists() {
+        // Given
         when(mongoTemplate.collectionExists("country_codes")).thenReturn(true);
 
+        // When
         countryCodeDataSeeder.run();
 
+        // Then
         verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
         assertTrue(logCaptor.getAllValues().stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("Collection 'country_codes' already exists")));
@@ -70,10 +73,13 @@ class CountryCodeDataSeederTest {
 
     @Test
     void testRun_SkipsLoading_WhenMongoDBUnavailable() {
+        // Given
         when(mongoTemplate.collectionExists("country_codes")).thenThrow(new DataAccessResourceFailureException("MongoDB down"));
 
+        // When
         countryCodeDataSeeder.run();
 
+        // Then
         verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
         assertTrue(logCaptor.getAllValues().stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("MongoDB unavailable")));
@@ -82,11 +88,14 @@ class CountryCodeDataSeederTest {
 
     @Test
     void testRun_LoadsCountryCodes_WhenCollectionDoesNotExist() {
+        // Given
         when(mongoTemplate.collectionExists("country_codes")).thenReturn(false);
         when(countryRepository.saveAll(any())).thenReturn(Collections.emptyList());
 
+        // When
         countryCodeDataSeeder.run();
 
+        // Then
         verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
         assertTrue(logCaptor.getAllValues().stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("Successfully loaded")));
@@ -95,6 +104,7 @@ class CountryCodeDataSeederTest {
 
     @Test
     void testLoadCountriesFromLocale_ReturnsListOfCountries() {
+        // When & Then
         List<CountryCode> countries = countryCodeDataSeeder.loadCountriesFromLocale();
         assertFalse(countries.isEmpty());
     }

@@ -23,6 +23,7 @@ public class BankMapper {
                 .bankName(response.getName())
                 .address(response.getAddress())
                 .countryISO2(response.getCountryIso2Code())
+                .isHeadquarter(response.getSwiftCode().endsWith("XXX"))
                 .countryName(response.getCountryName())
                 .build();
     }
@@ -33,6 +34,7 @@ public class BankMapper {
                 .bankName(response.getName())
                 .address(response.getAddress())
                 .countryISO2(response.getCountryIso2Code())
+                .isHeadquarter(response.getSwiftCode().endsWith("XXX"))
                 .countryName(null)
                 .build();
     }

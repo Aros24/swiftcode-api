@@ -1,5 +1,6 @@
 package com.exercise.swiftcode.api.bank.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,5 +22,6 @@ public class BanksByCountryResponse {
     String countryName;
 
     @Schema(description = "List of banks in the country with their SWIFT codes")
-    List<BankResponse> swiftCodes;
+    @JsonProperty("swiftCodes")
+    List<BankResponse> branches;
 }
