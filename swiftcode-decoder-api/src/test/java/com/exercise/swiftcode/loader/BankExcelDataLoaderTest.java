@@ -1,15 +1,22 @@
 package com.exercise.swiftcode.loader;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import com.exercise.swiftcode.persistence.entity.Bank;
 import com.exercise.swiftcode.persistence.repository.BankRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.Captor;
+import org.mockito.ArgumentCaptor;
+
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -20,8 +27,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 
 @ExtendWith(MockitoExtension.class)
 public class BankExcelDataLoaderTest {
@@ -57,6 +79,12 @@ public class BankExcelDataLoaderTest {
     @InjectMocks
     private BankExcelDataLoader bankExcelDataLoader;
 
+    @Mock
+    private Appender<ILoggingEvent> mockAppender;
+
+    @Captor
+    private ArgumentCaptor<ILoggingEvent> logCaptor;
+
     private static final String HEADER_COUNTRY_ISO2 = "COUNTRY ISO2 CODE";
     private static final String HEADER_SWIFT_CODE = "SWIFT CODE";
     private static final String HEADER_NAME = "NAME";
@@ -72,6 +100,11 @@ public class BankExcelDataLoaderTest {
     @BeforeEach
     void setUp() {
         bankExcelDataLoader.setResourceLoader(resourceLoader);
+        Logger logger = (Logger) LoggerFactory.getLogger(BankExcelDataLoader.class);
+        logger.addAppender(mockAppender);
+
+        lenient().when(resourceLoader.getResource("classpath:data/swift_codes.xlsx")).thenReturn(resource);
+        lenient().when(resource.exists()).thenReturn(true);
     }
 
     @Test
@@ -104,6 +137,9 @@ public class BankExcelDataLoaderTest {
         bankExcelDataLoader.run();
 
         // Then
+        verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
+        assertTrue(logCaptor.getAllValues().stream()
+                .anyMatch(event -> event.getFormattedMessage().contains("Collection 'banks' already exists")));
         verifyNoInteractions(bankRepository);
     }
 

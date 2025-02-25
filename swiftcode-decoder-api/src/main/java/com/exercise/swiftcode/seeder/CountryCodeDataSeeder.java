@@ -48,7 +48,7 @@ public class CountryCodeDataSeeder implements CommandLineRunner {
         logger.info("Successfully loaded {} country records from Locale.", countries.size());
     }
 
-    private List<CountryCode> loadCountriesFromLocale() {
+    protected List<CountryCode> loadCountriesFromLocale() {
         List<CountryCode> countries = new ArrayList<>();
         try {
             String[] isoCountries = Locale.getISOCountries();
@@ -74,7 +74,7 @@ public class CountryCodeDataSeeder implements CommandLineRunner {
         return countries;
     }
 
-    private boolean isNullOrEmpty(String s) {
+    protected boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
     }
 }
