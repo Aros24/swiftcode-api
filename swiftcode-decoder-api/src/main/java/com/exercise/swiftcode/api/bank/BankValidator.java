@@ -47,7 +47,7 @@ public class BankValidator {
     }
 
     private void validateHeadquarterSwiftCode(String swiftCode, boolean isHeadquarter) {
-        if (isHeadquarter && !swiftCode.endsWith(HEADQUARTER_SUFFIX_REGEX)) {
+        if (isHeadquarter && swiftCode.endsWith(HEADQUARTER_SUFFIX_REGEX)) {
             throw new ValidationException("Headquarter SWIFT Codes must end with XXX.");
         }
     }
