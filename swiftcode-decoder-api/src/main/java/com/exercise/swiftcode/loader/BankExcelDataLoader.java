@@ -81,10 +81,15 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
         logger.info("Successfully loaded {} bank records from Excel.", banks.size());
     }
 
-    private List<Bank> loadBanksFromExcel(Resource resource) {
+    protected List<Bank> loadBanksFromExcel(Resource resource) {
         List<Bank> banks = new ArrayList<>();
         try (InputStream is = resource.getInputStream();
              Workbook workbook = WorkbookFactory.create(is)) {
+            if (workbook.getNumberOfSheets() == 0) {
+                logger.warn("Excel file contains no sheets.");
+                return banks;
+            }
+
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rowIterator = sheet.iterator();
             if (!rowIterator.hasNext()) {
@@ -109,7 +114,7 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
         return banks;
     }
 
-    private Map<Integer, String> createHeaderMapping(Row headerRow, DataFormatter dataFormatter) {
+    protected Map<Integer, String> createHeaderMapping(Row headerRow, DataFormatter dataFormatter) {
         Map<Integer, String> headerMapping = new HashMap<>();
         for (Cell cell : headerRow) {
             String headerName = dataFormatter.formatCellValue(cell);
@@ -120,7 +125,7 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
         return headerMapping;
     }
 
-    private Bank processRow(Row row, Map<Integer, String> headerMapping, DataFormatter dataFormatter) {
+    protected Bank processRow(Row row, Map<Integer, String> headerMapping, DataFormatter dataFormatter) {
         Map<String, String> recordMap = new HashMap<>();
 
         for (Cell cell : row) {
