@@ -1,6 +1,7 @@
 package com.exercise.swiftcode.api.bank.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,7 @@ public class BankListResponse {
     String bankName;
 
     @Schema(description = "ISO2 code of the country for the bank", example = "PL")
+    @JsonProperty("countryISO2")
     String countryIso2;
 
     @Schema(description = "Country name of the bank", example = "POLAND")

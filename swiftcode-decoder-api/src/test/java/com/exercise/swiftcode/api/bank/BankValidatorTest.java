@@ -86,7 +86,6 @@ public class BankValidatorTest {
                 .hasMessage("Headquarter SWIFT Codes must end with XXX.");
     }
 
-    // Tests for validateBankName (via validateCreateBankRequest)
     @Test
     void validateCreateBankRequest_whenBankNameIsNull_throwsValidationException() {
         // Given
@@ -113,7 +112,6 @@ public class BankValidatorTest {
                 .hasMessage("Bank name cannot be null or empty.");
     }
 
-    // Tests for validateAddress (via validateCreateBankRequest)
     @Test
     void validateCreateBankRequest_whenAddressIsNull_throwsValidationException() {
         // Given
