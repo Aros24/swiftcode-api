@@ -19,6 +19,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
     }
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) throws Exception {
         try {
             if (mongoTemplate.collectionExists("banks")) {
                 logger.info("Collection 'banks' already exists. Skipping Excel data load.");
@@ -62,13 +63,13 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
             }
         } catch (DataAccessResourceFailureException e) {
             logger.error("MongoDB unavailable. Skipping Excel data load.", e);
-            return;
+            throw e;
         }
 
         Resource resource = resourceLoader.getResource("classpath:data/swift_codes.xlsx");
         if (!resource.exists()) {
             logger.error("Excel file not found at classpath:data/swift_codes.xlsx");
-            return;
+            throw new FileNotFoundException("Excel file not found at classpath:data/swift_codes.xlsx");
         }
 
         List<Bank> banks = loadBanksFromExcel(resource);
@@ -81,7 +82,7 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
         logger.info("Successfully loaded {} bank records from Excel.", banks.size());
     }
 
-    protected List<Bank> loadBanksFromExcel(Resource resource) {
+    protected List<Bank> loadBanksFromExcel(Resource resource) throws Exception {
         List<Bank> banks = new ArrayList<>();
         try (InputStream is = resource.getInputStream();
              Workbook workbook = WorkbookFactory.create(is)) {
@@ -110,6 +111,7 @@ public class BankExcelDataLoader implements CommandLineRunner, ResourceLoaderAwa
             }
         } catch (Exception e) {
             logger.error("Failed to read Excel file", e);
+            throw e;
         }
         return banks;
     }
