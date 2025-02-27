@@ -1,7 +1,7 @@
 # SwiftCode API
 
 ## Summary
-This fullstack application is designed to manage and decode SWIFT codes for banking systems. It provides a RESTful API built with Spring Boot and MongoDB, allowing users to interact with SWIFT code data efficiently. The project emphasizes clean code practices, security, and containerization with Docker. It includes unit tests and JaCoCo for code coverage analysis.
+This application is designed to manage and decode SWIFT codes for banking systems. It provides a RESTful API built with Spring Boot and MongoDB, allowing users to interact with SWIFT code data efficiently. The project emphasizes clean code practices, security, and containerization with Docker. It includes unit tests and JaCoCo for code coverage analysis.
 
 ## Technologies Used
 
@@ -22,8 +22,8 @@ This fullstack application is designed to manage and decode SWIFT codes for bank
 
 1. **Clone the repository:**
     ```sh
-    git clone https://github.com/your-username/swiftcode-decoder-api.git
-    cd swiftcode-decoder-api
+    git clone https://github.com/Aros24/swiftcode-api.git
+    cd swiftcode-api
     ```
 2. **Run the app with Docker Compose:**
     ```sh
