@@ -1,4 +1,4 @@
-package com.exercise.swiftcode.swiftcode_decoder_api;
+package com.exercise.swiftcode;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
