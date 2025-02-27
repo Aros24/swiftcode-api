@@ -69,7 +69,7 @@ The application uses the following configurations (defined in `application.prope
     ```sh
     mvn verify
     ```
-
+The report will be available in target/site/jacoco/index.html.
 ## Docker setup
 Docker Setup
 - **API Service:** Built from the Dockerfile in swiftcode-decoder-api/, exposing port 8080.
