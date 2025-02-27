@@ -12,7 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "banks")
 @Data
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class Bank {
     @Id

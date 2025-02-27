@@ -22,17 +22,31 @@ class BankMapperTest {
         bankMapper = new BankMapper();
     }
 
-    @Test
-    void toBank_whenRequestIsValid_mapsFieldsCorrectly() {
-        // Given
-        CreateBankRequest request = CreateBankRequest.builder()
+    private Bank createDefaultBank() {
+        return Bank.builder()
                 .swiftCode(BANK_SWIFT_CODE)
+                .name(BANK_NAME)
+                .address(BANK_ADDRESS)
+                .countryIso2Code(BANK_COUNTRY_CODE)
+                .countryName(BANK_COUNTRY_NAME)
+                .build();
+    }
+
+    private CreateBankRequest createDefaultCreateBankRequest() {
+        return CreateBankRequest.builder()
+                .swiftCode(BANK_SWIFT_CODE)
+                .isHeadquarter(true)
                 .bankName(BANK_NAME)
                 .address(BANK_ADDRESS)
                 .countryISO2(BANK_COUNTRY_CODE)
                 .countryName(BANK_COUNTRY_NAME)
-                .isHeadquarter(true)
                 .build();
+    }
+
+    @Test
+    void toBank_whenRequestIsValid_mapsFieldsCorrectly() {
+        // Given
+        CreateBankRequest request = createDefaultCreateBankRequest();
 
         // When
         Bank bank = bankMapper.toBank(request);
@@ -48,13 +62,7 @@ class BankMapperTest {
     @Test
     void toBankResponse_whenBankIsValid_mapsFieldsCorrectly() {
         // Given
-        Bank bank = Bank.builder()
-                .swiftCode(BANK_SWIFT_CODE)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
+        Bank bank = createDefaultBank();
 
         // When
         BankResponse response = bankMapper.toBankResponse(bank);
@@ -70,13 +78,7 @@ class BankMapperTest {
     @Test
     void toBankResponseNullCountryName_whenBankIsValid_mapsFieldsWithNullCountryName() {
         // Given
-        Bank bank = Bank.builder()
-                .swiftCode(BANK_SWIFT_CODE)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
+        Bank bank = createDefaultBank();
 
         // When
         BankResponse response = bankMapper.toBankResponseNullCountryName(bank);
