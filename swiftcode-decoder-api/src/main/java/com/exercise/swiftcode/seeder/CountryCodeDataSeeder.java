@@ -27,21 +27,21 @@ public class CountryCodeDataSeeder implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) throws Exception {
         try {
             if (mongoTemplate.collectionExists("country_codes")) {
                 logger.info("Collection 'country_codes' already exists. Skipping country data load from Locale.");
                 return;
             }
-        } catch (DataAccessResourceFailureException e) {
-            logger.error("MongoDB unavailable. Skipping country data load.", e);
-            return;
+        } catch (DataAccessResourceFailureException ex) {
+            logger.error("MongoDB unavailable. Skipping country data load.", ex);
+            throw ex;
         }
 
         List<CountryCode> countries = loadCountriesFromLocale();
         if (countries.isEmpty()) {
-            logger.warn("No country records generated from Locale.");
-            return;
+            logger.error("No country records generated from Locale.");
+            throw new IllegalStateException("No country data available for seeding");
         }
 
         countryRepository.saveAll(countries);
@@ -68,8 +68,9 @@ public class CountryCodeDataSeeder implements CommandLineRunner {
                 );
                 countries.add(country);
             }
-        } catch (Exception e) {
-            logger.error("Failed to generate country data from Locale", e);
+        } catch (Exception ex) {
+            logger.error("Failed to generate country data from Locale", ex);
+            throw ex;
         }
         return countries;
     }

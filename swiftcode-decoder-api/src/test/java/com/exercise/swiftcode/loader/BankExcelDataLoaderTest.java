@@ -19,8 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -108,7 +111,7 @@ public class BankExcelDataLoaderTest {
     }
 
     @Test
-    void testRun_SuccessfulLoad() {
+    void testRun_SuccessfulLoad() throws Exception {
         // Given
         when(resourceLoader.getResource("classpath:data/swift_codes.xlsx")).thenReturn(resource);
         when(resource.exists()).thenReturn(true);
@@ -129,7 +132,7 @@ public class BankExcelDataLoaderTest {
     }
 
     @Test
-    void testRun_CollectionExists_SkipsLoad() {
+    void testRun_CollectionExists_SkipsLoad() throws Exception {
         // Given
         when(mongoTemplate.collectionExists("banks")).thenReturn(true);
 
@@ -144,7 +147,7 @@ public class BankExcelDataLoaderTest {
     }
 
     @Test
-    void testLoadBanksFromExcel_Success() throws IOException {
+    void testLoadBanksFromExcel_Success() throws Exception {
         // Given
         when(resource.getInputStream()).thenReturn(inputStream);
         try (var workbookFactoryMock = mockStatic(WorkbookFactory.class)) {
@@ -171,7 +174,69 @@ public class BankExcelDataLoaderTest {
     }
 
     @Test
-    void testLoadBanksFromExcel_NoSheets() throws IOException {
+    void testRun_ThrowsException_WhenMongoDBUnavailable() {
+        // Given
+        DataAccessResourceFailureException mockException = new DataAccessResourceFailureException("MongoDB down");
+        when(mongoTemplate.collectionExists("banks")).thenThrow(mockException);
+
+        // When & Then
+        DataAccessResourceFailureException exception = assertThrows(
+                DataAccessResourceFailureException.class,
+                () -> bankExcelDataLoader.run()
+        );
+        assertEquals("MongoDB down", exception.getMessage());
+        verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
+        assertTrue(logCaptor.getAllValues().stream()
+                .anyMatch(event -> event.getFormattedMessage().contains("MongoDB unavailable")));
+        verifyNoInteractions(bankRepository);
+    }
+
+    @Test
+    void testRun_ThrowsException_WhenExcelFileNotFound() throws Exception {
+        // Given
+        when(mongoTemplate.collectionExists("banks")).thenReturn(false);
+        when(resource.exists()).thenReturn(false);
+
+        // When & Then
+        FileNotFoundException exception = assertThrows(
+                FileNotFoundException.class,
+                () -> bankExcelDataLoader.run()
+        );
+        assertEquals("Excel file not found at classpath:data/swift_codes.xlsx", exception.getMessage());
+        verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
+        assertTrue(logCaptor.getAllValues().stream()
+                .anyMatch(event -> event.getFormattedMessage().contains("Excel file not found at classpath:data/swift_codes.xlsx")));
+        verifyNoInteractions(bankRepository);
+    }
+
+    @Test
+    void testRun_ThrowsException_WhenLoadBanksFails() throws Exception {
+        // Given
+        Logger logger = (Logger) LoggerFactory.getLogger(BankExcelDataLoader.class);
+        logger.detachAndStopAllAppenders();
+        logger.addAppender(mockAppender);
+        when(mongoTemplate.collectionExists("banks")).thenReturn(false);
+        when(resource.getInputStream()).thenReturn(inputStream);
+
+        try (var workbookFactoryMock = mockStatic(WorkbookFactory.class)) {
+            IOException mockException = new IOException("Failed to read Excel");
+            workbookFactoryMock.when(() -> WorkbookFactory.create(inputStream)).thenThrow(mockException);
+
+            // When & Then
+            IOException exception = assertThrows(
+                    IOException.class,
+                    () -> bankExcelDataLoader.run()
+            );
+            assertEquals("Failed to read Excel", exception.getMessage());
+            verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
+            assertTrue(logCaptor.getAllValues().stream()
+                    .anyMatch(event -> event.getFormattedMessage().contains("Failed to read Excel file")));
+            verifyNoInteractions(bankRepository);
+        }
+    }
+
+    @Test
+    void testLoadBanksFromExcel_NoSheets() throws Exception {
         // Given
         when(resource.getInputStream()).thenReturn(inputStream);
         try (var workbookFactoryMock = mockStatic(WorkbookFactory.class)) {

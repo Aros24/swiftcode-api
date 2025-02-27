@@ -16,21 +16,27 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.doThrow;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 @ExtendWith(MockitoExtension.class)
 class CountryCodeDataSeederTest {
@@ -57,7 +63,7 @@ class CountryCodeDataSeederTest {
     }
 
     @Test
-    void testRun_SkipsLoading_WhenCollectionExists() {
+    void testRun_SkipsLoading_WhenCollectionExists() throws Exception {
         // Given
         when(mongoTemplate.collectionExists("country_codes")).thenReturn(true);
 
@@ -76,10 +82,13 @@ class CountryCodeDataSeederTest {
         // Given
         when(mongoTemplate.collectionExists("country_codes")).thenThrow(new DataAccessResourceFailureException("MongoDB down"));
 
-        // When
-        countryCodeDataSeeder.run();
+        // When & Then
+        DataAccessResourceFailureException exception = assertThrows(
+                DataAccessResourceFailureException.class,
+                () -> countryCodeDataSeeder.run()
+        );
+        assertEquals("MongoDB down", exception.getMessage());
 
-        // Then
         verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
         assertTrue(logCaptor.getAllValues().stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("MongoDB unavailable")));
@@ -87,7 +96,7 @@ class CountryCodeDataSeederTest {
     }
 
     @Test
-    void testRun_LoadsCountryCodes_WhenCollectionDoesNotExist() {
+    void testRun_LoadsCountryCodes_WhenCollectionDoesNotExist() throws Exception {
         // Given
         when(mongoTemplate.collectionExists("country_codes")).thenReturn(false);
         when(countryRepository.saveAll(any())).thenReturn(Collections.emptyList());
@@ -100,6 +109,51 @@ class CountryCodeDataSeederTest {
         assertTrue(logCaptor.getAllValues().stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("Successfully loaded")));
         verify(countryRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void testRun_ThrowsIllegalStateException_WhenNoCountriesLoaded() throws Exception {
+        // Given
+        when(mongoTemplate.collectionExists("country_codes")).thenReturn(false);
+        CountryCodeDataSeeder spySeeder = spy(countryCodeDataSeeder);
+        doReturn(new ArrayList<CountryCode>()).when(spySeeder).loadCountriesFromLocale();
+
+        // When & Then
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                spySeeder::run
+        );
+        assertEquals("No country data available for seeding", exception.getMessage());
+
+        verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
+        assertTrue(logCaptor.getAllValues().stream()
+                .anyMatch(event -> event.getFormattedMessage().contains("No country records generated from Locale")));
+        verifyNoInteractions(countryRepository);
+    }
+
+    @Test
+    void testRun_ThrowsException_WhenLoadCountriesFails() throws Exception {
+        // Given
+        Logger logger = (Logger) LoggerFactory.getLogger(CountryCodeDataSeeder.class);
+        logger.detachAndStopAllAppenders();
+        logger.addAppender(mockAppender);
+        when(mongoTemplate.collectionExists("country_codes")).thenReturn(false);
+
+        try (var mockedStatic = mockStatic(Locale.class)) {
+            RuntimeException mockException = new RuntimeException("Locale data unavailable");
+            mockedStatic.when(Locale::getISOCountries).thenThrow(mockException);
+
+            // When & Then
+            RuntimeException exception = assertThrows(
+                    RuntimeException.class,
+                    () -> countryCodeDataSeeder.run()
+            );
+            assertEquals("Locale data unavailable", exception.getMessage());
+            verify(mockAppender, atLeastOnce()).doAppend(logCaptor.capture());
+            assertTrue(logCaptor.getAllValues().stream()
+                    .anyMatch(event -> event.getFormattedMessage().contains("Failed to generate country data from Locale")));
+            verifyNoInteractions(countryRepository);
+        }
     }
 
     @Test
