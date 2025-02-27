@@ -60,8 +60,6 @@ public class BankServiceTest {
     private static final String BANK_SWIFTCODE_BRANCH = "TESTUS33111";
     private static final String BANK_SWIFTCODE_PREFIX = "TESTUS33";
 
-
-
     @BeforeEach
     void setUp() {
         validRequest = CreateBankRequest.builder()
@@ -74,16 +72,30 @@ public class BankServiceTest {
                 .build();
     }
 
-    @Test
-    void createBank_successfulCreation_returnsSuccessMessage() {
-        // Given
-        Bank bank = Bank.builder()
+    private Bank createDefaultBank() {
+        return Bank.builder()
                 .swiftCode(BANK_SWIFTCODE_HQ)
                 .name(BANK_NAME)
                 .address(BANK_ADDRESS)
                 .countryIso2Code(BANK_COUNTRY_CODE)
                 .countryName(BANK_COUNTRY_NAME)
                 .build();
+    }
+
+    private BankResponse createDefaultBankResponse() {
+        return BankResponse.builder()
+                .swiftCode(BANK_SWIFTCODE_HQ)
+                .bankName(BANK_NAME)
+                .address(BANK_ADDRESS)
+                .countryISO2(BANK_COUNTRY_CODE)
+                .countryName(BANK_COUNTRY_NAME)
+                .build();
+    }
+
+    @Test
+    void createBank_successfulCreation_returnsSuccessMessage() {
+        // Given
+        Bank bank = createDefaultBank();
 
         when(bankRepository.existsBySwiftCode(BANK_SWIFTCODE_HQ)).thenReturn(false);
         when(countryCodeRepository.findByCountryIso2Code(BANK_COUNTRY_CODE))
@@ -232,21 +244,13 @@ public class BankServiceTest {
     @Test
     void getBankAndBranches_nonHeadquarter_successfulRetrieval_returnsBankListResponse() {
         // Given
-        Bank branchBank = Bank.builder()
+        Bank branchBank = createDefaultBank().toBuilder()
                 .swiftCode(BANK_SWIFTCODE_BRANCH)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
                 .build();
 
-        BankResponse branchResponse = BankResponse.builder()
-                .swiftCode(BANK_SWIFTCODE_BRANCH)
-                .bankName(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryISO2(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
+        BankResponse branchResponse = createDefaultBankResponse().toBuilder()
+                        .swiftCode(BANK_SWIFTCODE_BRANCH)
+                        .build();
 
         when(bankRepository.findBySwiftCode(BANK_SWIFTCODE_BRANCH))
                 .thenReturn(Optional.of(branchBank));
@@ -274,35 +278,18 @@ public class BankServiceTest {
     @Test
     void getBankAndBranches_headquarter_successfulRetrievalWithBranches_returnsBankListResponse() {
         // Given
-        Bank hqBank = Bank.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
-
-        Bank branchBank = Bank.builder()
+        Bank hqBank = createDefaultBank();
+        Bank branchBank = createDefaultBank().toBuilder()
                 .swiftCode(BANK_SWIFTCODE_BRANCH)
                 .name(BANK_NAME + " Branch")
                 .address(BANK_ADDRESS + " Branch")
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
                 .build();
 
-        BankResponse hqResponse = BankResponse.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .bankName(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryISO2(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
-
-        BankResponse branchResponse = BankResponse.builder()
+        BankResponse hqResponse = createDefaultBankResponse();
+        BankResponse branchResponse = createDefaultBankResponse().toBuilder()
                 .swiftCode(BANK_SWIFTCODE_BRANCH)
                 .bankName(BANK_NAME + " Branch")
                 .address(BANK_ADDRESS + " Branch")
-                .countryISO2(BANK_COUNTRY_CODE)
                 .countryName(null)
                 .build();
 
@@ -383,35 +370,19 @@ public class BankServiceTest {
                 .countryName(BANK_COUNTRY_NAME)
                 .build();
 
-        Bank bank1 = Bank.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
-
-        Bank bank2 = Bank.builder()
-                .swiftCode(BANK_SWIFTCODE_BRANCH)
+        Bank bank1 = createDefaultBank();
+        Bank bank2 = createDefaultBank().toBuilder()
                 .name(BANK_NAME + " Branch")
                 .address(BANK_ADDRESS + " Branch")
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
                 .build();
 
-        BankResponse response1 = BankResponse.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .bankName(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryISO2(BANK_COUNTRY_CODE)
+        BankResponse response1 = createDefaultBankResponse().toBuilder()
                 .countryName(null)
                 .build();
-
-        BankResponse response2 = BankResponse.builder()
+        BankResponse response2 = createDefaultBankResponse().toBuilder()
                 .swiftCode(BANK_SWIFTCODE_BRANCH)
                 .bankName(BANK_NAME + " Branch")
                 .address(BANK_ADDRESS + " Branch")
-                .countryISO2(BANK_COUNTRY_CODE)
                 .countryName(null)
                 .build();
 

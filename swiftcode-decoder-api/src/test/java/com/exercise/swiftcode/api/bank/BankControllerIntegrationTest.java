@@ -55,17 +55,31 @@ public class BankControllerIntegrationTest {
         countryCodeRepository.save(country);
     }
 
+    private Bank createDefaultBank() {
+        return Bank.builder()
+                .swiftCode(BANK_SWIFTCODE_HQ)
+                .name(BANK_NAME)
+                .address(BANK_ADDRESS)
+                .countryIso2Code(BANK_COUNTRY_CODE)
+                .countryName(BANK_COUNTRY_NAME)
+                .build();
+    }
+
+    private CreateBankRequest createDefaultCreateBankRequest() {
+        return CreateBankRequest.builder()
+                .swiftCode(BANK_SWIFTCODE_HQ)
+                .isHeadquarter(true)
+                .bankName(BANK_NAME)
+                .address(BANK_ADDRESS)
+                .countryISO2(BANK_COUNTRY_CODE)
+                .countryName(BANK_COUNTRY_NAME)
+                .build();
+    }
+
     @Test
     void createBank_validRequest_returnsCreatedStatusAndMessage() throws Exception {
         // Given
-        CreateBankRequest request = CreateBankRequest.builder()
-            .swiftCode(BANK_SWIFTCODE_HQ)
-            .isHeadquarter(true)
-            .bankName(BANK_NAME)
-            .address(BANK_ADDRESS)
-            .countryISO2(BANK_COUNTRY_CODE)
-            .countryName(BANK_COUNTRY_NAME)
-            .build();
+        CreateBankRequest request = createDefaultCreateBankRequest();
 
         // When & Then
         mockMvc.perform(post(BASE_URL)
@@ -78,22 +92,9 @@ public class BankControllerIntegrationTest {
     @Test
     void createBank_duplicateSwiftCode_returnsConflict() throws Exception {
         // Given
-        Bank bank = Bank.builder()
-            .swiftCode(BANK_SWIFTCODE_HQ)
-            .name(BANK_NAME)
-            .address(BANK_ADDRESS)
-            .countryIso2Code(BANK_COUNTRY_CODE)
-            .countryName(BANK_COUNTRY_NAME)
-            .build();
+        Bank bank = createDefaultBank();
         bankRepository.save(bank);
-        CreateBankRequest request = CreateBankRequest.builder()
-            .swiftCode(BANK_SWIFTCODE_HQ)
-            .isHeadquarter(true)
-            .bankName(BANK_NAME)
-            .address(BANK_ADDRESS)
-            .countryISO2(BANK_COUNTRY_CODE)
-            .countryName(BANK_COUNTRY_NAME)
-            .build();
+        CreateBankRequest request = createDefaultCreateBankRequest();
 
         // When & Then
         mockMvc.perform(post(BASE_URL)
@@ -125,13 +126,8 @@ public class BankControllerIntegrationTest {
     @Test
     void createBank_givenInvalidSwiftCode_whenPost_thenReturnsBadRequest() throws Exception {
         // Given
-        CreateBankRequest request = CreateBankRequest.builder()
+        CreateBankRequest request = createDefaultCreateBankRequest().toBuilder()
                 .swiftCode("SHORT")
-                .isHeadquarter(true)
-                .bankName(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryISO2(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
                 .build();
 
         // When & Then
@@ -145,13 +141,8 @@ public class BankControllerIntegrationTest {
     @Test
     void createBank_givenMissingBankName_whenPost_thenReturnsBadRequest() throws Exception {
         // Given
-        CreateBankRequest request = CreateBankRequest.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .isHeadquarter(true)
+        CreateBankRequest request = createDefaultCreateBankRequest().toBuilder()
                 .bankName(null)
-                .address(BANK_ADDRESS)
-                .countryISO2(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
                 .build();
 
         // When & Then
@@ -166,13 +157,7 @@ public class BankControllerIntegrationTest {
     @Test
     void deleteBank_givenExistingBank_whenDelete_thenReturnsOk() throws Exception {
         // Given
-        Bank bank = Bank.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
+        Bank bank = createDefaultBank();
         bankRepository.save(bank);
 
         // When & Then
@@ -218,20 +203,12 @@ public class BankControllerIntegrationTest {
     @Test
     void getBankAndBranches_givenExistingHeadquarterWithBranch_whenGet_thenReturnsOk() throws Exception {
         // Given
-        Bank hqBank = Bank.builder()
-            .swiftCode(BANK_SWIFTCODE_HQ)
-            .name(BANK_NAME)
-            .address(BANK_ADDRESS)
-            .countryIso2Code(BANK_COUNTRY_CODE)
-            .countryName(BANK_COUNTRY_NAME)
-            .build();
-        Bank branchBank = Bank.builder()
-            .swiftCode(BANK_SWIFTCODE_BRANCH)
-            .name(BANK_NAME + " Branch")
-            .address(BANK_ADDRESS + " Branch")
-            .countryIso2Code(BANK_COUNTRY_CODE)
-            .countryName(BANK_COUNTRY_NAME)
-            .build();
+        Bank hqBank = createDefaultBank();
+        Bank branchBank = createDefaultBank().toBuilder()
+                .swiftCode(BANK_SWIFTCODE_BRANCH)
+                .name(BANK_NAME + " Branch")
+                .address(BANK_ADDRESS + " Branch")
+                .build();
         bankRepository.save(hqBank);
         bankRepository.save(branchBank);
 
@@ -251,13 +228,7 @@ public class BankControllerIntegrationTest {
     @Test
     void getBankAndBranches_givenExistingHeadquarterWithoutBranch_whenGet_thenReturnsOk() throws Exception {
         // Given
-        Bank hqBank = Bank.builder()
-            .swiftCode(BANK_SWIFTCODE_HQ)
-            .name(BANK_NAME)
-            .address(BANK_ADDRESS)
-            .countryIso2Code(BANK_COUNTRY_CODE)
-            .countryName(BANK_COUNTRY_NAME)
-            .build();
+        Bank hqBank = createDefaultBank();
         bankRepository.save(hqBank);
 
         // When & Then
@@ -283,19 +254,11 @@ public class BankControllerIntegrationTest {
     @Test
     void getBanksByIsoCode_givenExistingBanks_whenGet_thenReturnsOk() throws Exception {
         // Given
-        Bank bank1 = Bank.builder()
-                .swiftCode(BANK_SWIFTCODE_HQ)
-                .name(BANK_NAME)
-                .address(BANK_ADDRESS)
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
-                .build();
-        Bank bank2 = Bank.builder()
+        Bank bank1 = createDefaultBank();
+        Bank bank2 = createDefaultBank().toBuilder()
                 .swiftCode(BANK_SWIFTCODE_BRANCH)
                 .name(BANK_NAME + " Branch")
                 .address(BANK_ADDRESS + " Branch")
-                .countryIso2Code(BANK_COUNTRY_CODE)
-                .countryName(BANK_COUNTRY_NAME)
                 .build();
         bankRepository.save(bank1);
         bankRepository.save(bank2);

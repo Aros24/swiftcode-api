@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BankResponse {
